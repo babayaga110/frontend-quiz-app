@@ -1,4 +1,4 @@
 # frontend-quiz-app
 Under development
 
-Is cloning finished or not?
+Is the cloning process complete?
