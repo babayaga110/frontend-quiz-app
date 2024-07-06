@@ -3,6 +3,8 @@ import Register from "./components/auth/register";
 import Header from "./components/header";
 import Home from "./components/home";
 import CreateQuiz from "./components/home/CreateQuiz";
+import EditQuiz from "./components/home/EditQuiz";
+import QuizDetail from "./components/home/QuizDetail";
 import QuizList from "./components/home/QuizList";
 import { AuthProvider } from "./contexts/authContext";
 import { useRoutes } from "react-router-dom";
@@ -33,6 +35,15 @@ function App() {
       path: "/listquiz",
       element: <QuizList />,
     },
+    {
+      path: "/quiz/:id",
+      element: <QuizDetail />,
+    },
+    {
+      path: "/edit/:id",
+      element: <EditQuiz />,
+    },
+    
   ];
   let routesElement = useRoutes(routesArray);
   return (

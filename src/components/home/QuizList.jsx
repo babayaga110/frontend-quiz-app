@@ -1,11 +1,10 @@
 // QuizList.js
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { database } from '../../firebase/firebase';
 import { ref, onValue, remove, update  } from 'firebase/database';
 const QuizList = () => {
   const [quizzes, setQuizzes] = useState([]);
-  const [editingQuiz, setEditingQuiz] = useState(null);
-  const [editForm, setEditForm] = useState({ question: '', options: [], correctOption: '' });
 
   useEffect(() => {
     const quizzesRef = ref(database, 'quizzes');
@@ -16,55 +15,18 @@ const QuizList = () => {
     });
   }, []);
 
-  const handleDeleteAll = () => {
-    if (window.confirm('Are you sure you want to delete all quizzes?')) {
-      remove(ref(database, 'quizzes'))
+  const handleDelete = (id) => {
+    if (window.confirm('Are you sure you want to delete this quiz?')) {
+      remove(ref(database, `quizzes/${id}`))
         .then(() => {
-          alert('All quizzes deleted successfully!');
-          setQuizzes([]);
+          alert('Quiz deleted successfully!');
+          const updatedQuizzes = quizzes.filter(quiz => quiz.id !== id);
+          setQuizzes(updatedQuizzes);
         })
         .catch((error) => {
-          alert('Error deleting quizzes: ' + error);
+          alert('Error deleting quiz: ' + error);
         });
     }
-  };
-
-  const handleEditClick = (quiz) => {
-    setEditingQuiz(quiz.id);
-    setEditForm({ question: quiz.question, options: quiz.options, correctOption: quiz.correctOption });
-  };
-
-  const handleEditChange = (e) => {
-    const { name, value } = e.target;
-    setEditForm(prevForm => ({
-      ...prevForm,
-      [name]: value
-    }));
-  };
-
-  const handleEditOptionChange = (index, value) => {
-    const newOptions = [...editForm.options];
-    newOptions[index] = value;
-    setEditForm(prevForm => ({
-      ...prevForm,
-      options: newOptions
-    }));
-  };
-
-  const handleSaveEdit = () => {
-    const quizRef = ref(database, `quizzes/${editingQuiz}`);
-    update(quizRef, editForm)
-      .then(() => {
-        alert('Quiz updated successfully!');
-        setEditingQuiz(null); // Exit edit mode
-      })
-      .catch((error) => {
-        alert('Error updating quiz: ' + error);
-      });
-  };
-
-  const handleCancelEdit = () => {
-    setEditingQuiz(null);
   };
 
   return (
@@ -75,72 +37,22 @@ const QuizList = () => {
           <ul className="space-y-6">
             {quizzes.map(quiz => (
               <li key={quiz.id} className="border-b pb-4 border-blue-200">
-                {editingQuiz === quiz.id ? (
-                  <div>
-                    <div className="mb-4">
-                      <label className="block text-gray-700 font-bold mb-2" htmlFor="question">Question</label>
-                      <input
-                        type="text"
-                        name="question"
-                        id="question"
-                        value={editForm.question}
-                        onChange={handleEditChange}
-                        className="w-full p-2 border rounded text-black"
-                      />
-                    </div>
-                    {editForm.options.map((option, index) => (
-                      <div key={index} className="mb-4">
-                        <label className="block text-gray-700 font-bold mb-2" htmlFor={`option-${index}`}>Option {index + 1}</label>
-                        <input
-                          type="text"
-                          id={`option-${index}`}
-                          value={option}
-                          onChange={(e) => handleEditOptionChange(index, e.target.value)}
-                          className="w-full p-2 border rounded text-black"
-                        />
-                      </div>
-                    ))}
-                    <div className="mb-4">
-                      <label className="block text-gray-700 font-bold mb-2" htmlFor="correctOption">Correct Answer</label>
-                      <input
-                        type="text"
-                        name="correctOption"
-                        id="correctOption"
-                        value={editForm.correctOption}
-                        onChange={handleEditChange}
-                        className="w-full p-2 border rounded text-black"
-                      />
-                    </div>
-                    <button onClick={handleSaveEdit} className="mt-2 w-full py-2 px-4 bg-green-500 text-white rounded-lg hover:bg-green-600">
-                      Save
-                    </button>
-                    <button onClick={handleCancelEdit} className="mt-2 w-full py-2 px-4 bg-gray-500 text-white rounded-lg hover:bg-gray-600">
-                      Cancel
-                    </button>
-                  </div>
-                ) : (
-                  <div>
-                    <h3 className="text-xl font-semibold text-blue-700">{quiz.question}</h3>
-                    <ul className="pl-5 mt-2 list-disc space-y-1">
-                      {quiz.options.map((option, index) => (
-                        <li key={index} className="text-gray-700">{option}</li>
-                      ))}
-                    </ul>
-                    <p className="mt-3 text-green-700 font-medium">Correct Answer: {quiz.correctOption}</p>
-                    <button onClick={() => handleEditClick(quiz)} className="mt-2 py-1 px-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600">
-                      Update Quiz
-                    </button>
-                  </div>
-                )}
+                <Link to={`/quiz/${quiz.id}`} className="block text-xl text-white bg-green-500 text-center hover:bg-green-700 transition-colors duration-300 border-2 border-green-500 p-1 rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50">
+                  {quiz.question}
+                </Link>
+                <div className="mt-2 flex items-center space-x-4">
+                  <Link to={`/edit/${quiz.id}`} className="text-xl text-white bg-sky-500 hover:bg-sky-700 transition-colors duration-300 border-2 border-sky-500 p-2 rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-opacity-50">Edit</Link>
+                  <button onClick={() => handleDelete(quiz.id)} className=" text-xl bg-red-400 text-green hover:text-red-700 transition-colors duration-300 border-2  p-2 rounded-lg shadow-md hover:shadow-lg ">Delete</button>
+                </div>
+                <ul className="pl-5 mt-2 list-disc space-y-1">
+                  {quiz.options.map((option, index) => (
+                    <li key={index} className="text-gray-700">{option}</li>
+                  ))}
+                </ul>
+                <p className="mt-3 text-green-700 font-medium">Correct Answer: {quiz.correctOption}</p>
               </li>
             ))}
           </ul>
-          <button
-            onClick={handleDeleteAll}
-            className="mt-6 w-full py-2 px-4 bg-red-500 text-white rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500"
-          >
-            Delete All Quizzes
-          </button>
         </div>
       ) : (
         <p className="text-center text-gray-500">No questions available</p>
